@@ -1,0 +1,158 @@
+@import 'pretendard/dist/web/variable/pretendardvariable.css';
+@import '@fontsource/jua/index.css';
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #e87343;
+  --color-primary-hover: #d65b30;
+  --color-primary-deep: #b9461f;
+  --color-cream: #fff8ed;
+  --color-cream-deep: #fbead2;
+  --color-surface: #ffffff;
+  --color-mint: #c7e8dd;
+  --color-lemon: #ffd56a;
+  --color-ink: #382b28;
+  --color-muted: #83736d;
+  --color-danger: #d9473b;
+
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-display: 'Jua', 'Pretendard Variable', sans-serif;
+}
+
+/*
+ * 화면 크기 맞춤: 1920×1080 에서 1rem = 16px.
+ * 화면이 작아지면 rem 자체가 줄어들어 전체 레이아웃이 비율 그대로 축소된다.
+ * (모든 크기를 rem 으로 지정 → 스크롤 없이 한 화면에 들어감)
+ */
+html {
+  font-size: clamp(9px, min(calc(100vw / 120), calc(100vh / 67.5)), 22px);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+:focus-visible:not([role="dialog"]) {
+  outline: 0.25rem solid #2f6fd0;
+  outline-offset: 0.2rem;
+  border-radius: 0.75rem;
+}
+
+/* 배경 무늬: 아주 옅은 물방울 패턴 */
+.kitchen-bg {
+  background-color: var(--color-cream);
+  background-image:
+    radial-gradient(circle at 1.5rem 1.5rem, rgba(232, 115, 67, 0.07) 0.35rem, transparent 0.4rem),
+    radial-gradient(circle at 4.5rem 4.5rem, rgba(56, 43, 40, 0.035) 0.3rem, transparent 0.35rem);
+  background-size: 6rem 6rem;
+}
+
+/* 통통 튀는 버튼 공통 */
+.btn-3d {
+  transition:
+    transform 0.12s cubic-bezier(0.3, 1.6, 0.5, 1),
+    box-shadow 0.12s ease,
+    background-color 0.15s ease,
+    filter 0.15s ease;
+}
+.btn-3d:not(:disabled):hover {
+  transform: translateY(-0.15rem) scale(1.02);
+}
+.btn-3d:not(:disabled):active {
+  transform: translateY(0.3rem) scale(0.99);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  box-shadow:
+    0 0.45rem 0 var(--color-primary-deep),
+    0 0.9rem 1.6rem rgba(185, 70, 31, 0.28);
+}
+.btn-primary:not(:disabled):hover {
+  background: var(--color-primary-hover);
+}
+.btn-primary:not(:disabled):active {
+  box-shadow:
+    0 0.15rem 0 var(--color-primary-deep),
+    0 0.4rem 0.8rem rgba(185, 70, 31, 0.25);
+}
+.btn-primary:disabled {
+  filter: saturate(0.35) brightness(1.08);
+  opacity: 0.75;
+}
+
+.btn-soft {
+  background: white;
+  color: var(--color-ink);
+  box-shadow:
+    0 0.3rem 0 #e8d6bf,
+    0 0.5rem 1rem rgba(56, 43, 40, 0.08);
+  border: 0.15rem solid #f0e1cc;
+}
+.btn-soft:not(:disabled):active {
+  box-shadow: 0 0.1rem 0 #e8d6bf;
+}
+.btn-soft:disabled {
+  opacity: 0.45;
+}
+
+/* 룰렛 뒤 회전 광선 */
+.rays {
+  background: repeating-conic-gradient(from 0deg, rgba(255, 213, 106, 0.55) 0deg 10deg, rgba(255, 213, 106, 0) 10deg 30deg);
+  mask-image: radial-gradient(circle, black 30%, transparent 70%);
+  -webkit-mask-image: radial-gradient(circle, black 30%, transparent 70%);
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 24s linear infinite;
+}
+.animate-spin-fast {
+  animation: spin-slow 3s linear infinite;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-0.6rem);
+  }
+}
+.animate-floaty {
+  animation: floaty 2.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin-slow,
+  .animate-spin-fast,
+  .animate-floaty {
+    animation: none;
+  }
+}
