@@ -163,3 +163,14 @@ drinks:
     description: 달콤 시원한 아이스티
     containsCaffeine: true   # 홍차 기반 제품은 대부분 카페인 포함 — 사용 제품 라벨 확인
     containsMilk: false
+
+  - id: dejawa
+    name: 데자와
+    flavor: { sweet: 0.6, creamy: 0.8, bitter: 0.3, light: 0.2 }
+    icon: can
+    color: "#7A5236"
+    liquid: "#E2C29E"
+    label: MILK TEA
+    description: 부드러운 캔 밀크티
+    containsCaffeine: true   # 홍차 밀크티 — 사용 제품 라벨 확인
+    containsMilk: true       # 우유 성분 포함 — 사용 제품 라벨 확인

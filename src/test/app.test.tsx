@@ -1,6 +1,9 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
+import { DRINKS } from '../data/drinks'
+
+const N = DRINKS.length // drinks.yaml 의 음료 수
 import { generateRecipe } from '../logic/recipeGenerator'
 
 vi.mock('../logic/recipeGenerator', async (orig) => {
@@ -64,7 +67,7 @@ describe('설정 모달', () => {
     expect(americano).toHaveAttribute('aria-checked', 'true')
     fireEvent.click(americano)
     expect(americano).toHaveAttribute('aria-checked', 'false')
-    expect(within(dialog).getByTestId('enabled-count')).toHaveTextContent('현재 10개의 음료가 선택되었습니다.')
+    expect(within(dialog).getByTestId('enabled-count')).toHaveTextContent(`현재 ${N - 1}개의 음료가 선택되었습니다.`)
   })
 
   it('음료가 최대 개수보다 적으면 안내하고 시작 버튼을 막는다 (최대값을 몰래 바꾸지 않음)', async () => {
@@ -94,7 +97,7 @@ describe('설정 모달', () => {
     const dialog = openSettings()
     fireEvent.click(within(dialog).getByRole('checkbox', { name: '콜라' }))
     fireEvent.click(within(dialog).getByRole('button', { name: /설정 닫기/ }))
-    expect(summary()).toContain('11/11')
+    expect(summary()).toContain(`${N}/${N}`)
   })
 })
 
@@ -108,7 +111,7 @@ describe('추첨 흐름', () => {
     fireEvent.click(within(dialog).getByRole('checkbox', { name: '우유' }))
     fireEvent.click(within(dialog).getByRole('button', { name: '이 설정으로 시작하기' }))
     await advance(500)
-    expect(summary()).toContain('9/11')
+    expect(summary()).toContain(`${N - 2}/${N}`)
 
     fireEvent.click(drawButton())
     expect(phase(container)).toBe('spinningIngredients')
@@ -150,12 +153,12 @@ describe('추첨 흐름', () => {
     expect(second.maxCount).toBe(4)
     await advance(LONGEST_SHOW_MS)
     expect(phase(container)).toBe('completed')
-    expect(summary()).toContain('9/11')
+    expect(summary()).toContain(`${N - 2}/${N}`)
 
     // 시나리오 3 — 새 손님 시작
     fireEvent.click(screen.getByRole('button', { name: /새 손님 시작/ }))
     expect(phase(container)).toBe('idle')
-    expect(summary()).toContain('11/11')
+    expect(summary()).toContain(`${N}/${N}`)
     expect(summary()).toContain('2~4가지')
     await advance(300)
     expect(screen.getByText('새 손님 어서 오세요!')).toBeInTheDocument()

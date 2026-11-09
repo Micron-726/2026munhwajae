@@ -134,12 +134,69 @@ export function harmonySetDistribution(
   emb: Embeddings,
   beta: number,
 ): { set: string[]; p: number }[] {
-  const sets = [...combinations(ids, n)]
-  const logW = sets.map((s) => beta * meanPairSimilarity(s, emb))
+  const t = setTable(Array.from(new Set(ids)), n, emb, beta)
+  return t.sets.map((set, i) => ({ set, p: t.p[i] }))
+}
+
+interface SetTable {
+  sets: string[][]
+  p: Float64Array
+  /** 누적 확률 (이진 탐색 샘플링용) */
+  cum: Float64Array
+}
+
+/**
+ * 모든 묶음과 확률표. 유사도 행렬을 한 번만 계산하고,
+ * 같은 음료 목록·개수·β 조합은 캐시해서 연속 뽑기 때 다시 계산하지 않는다.
+ */
+const tableCache = new WeakMap<Embeddings, Map<string, SetTable>>()
+
+function setTable(pool: readonly string[], n: number, emb: Embeddings, beta: number): SetTable {
+  let byEmb = tableCache.get(emb)
+  if (!byEmb) {
+    byEmb = new Map()
+    tableCache.set(emb, byEmb)
+  }
+  const key = `${beta}|${n}|${pool.join(',')}`
+  const hit = byEmb.get(key)
+  if (hit) return hit
+
+  const k = pool.length
+  const S = pool.map((a) => pool.map((b) => cosine(emb.get(a), emb.get(b))))
+  const pairs = (n * (n - 1)) / 2
+  const index = Array.from({ length: k }, (_, i) => i)
+  const sets: string[][] = []
+  const logW: number[] = []
+  for (const c of combinations(index, n)) {
+    let s = 0
+    for (let i = 0; i < c.length; i++) for (let j = i + 1; j < c.length; j++) s += S[c[i]][c[j]]
+    sets.push(c.map((i) => pool[i]))
+    logW.push(pairs ? (beta * s) / pairs : 0)
+  }
   const max = Math.max(...logW)
   const w = logW.map((l) => Math.exp(l - max))
   const total = w.reduce((a, b) => a + b, 0)
-  return sets.map((set, i) => ({ set, p: w[i] / total }))
+  const p = Float64Array.from(w, (x) => x / total)
+  const cum = new Float64Array(p.length)
+  let acc = 0
+  for (let i = 0; i < p.length; i++) cum[i] = acc += p[i]
+
+  const table = { sets, p, cum }
+  if (byEmb.size >= 64) byEmb.clear()
+  byEmb.set(key, table)
+  return table
+}
+
+function sampleFromTable(t: SetTable, rng: Rng): string[] {
+  const r = rng() * t.cum[t.cum.length - 1]
+  let lo = 0
+  let hi = t.cum.length - 1
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (t.cum[mid] > r) hi = mid
+    else lo = mid + 1
+  }
+  return t.sets[lo].slice()
 }
 
 /** p(S|n) ∝ exp(β · 평균 쌍별 유사도) 에서 서로 다른 음료 n 개를 뽑는다. */
@@ -156,13 +213,8 @@ export function sampleHarmonySet(
   if (n === 1 || beta === 0) return shuffle(pool, rng).slice(0, n)
 
   if (binomial(pool.length, n) <= ENUM_LIMIT) {
-    // 정확한 샘플링: 모든 묶음 나열
-    const sets = [...combinations(pool, n)]
-    const idx = sampleIndexFromLogWeights(
-      sets.map((s) => beta * meanPairSimilarity(s, emb)),
-      rng,
-    )
-    return sets[idx]
+    // 정확한 샘플링: 모든 묶음 나열 (확률표는 캐시됨)
+    return sampleFromTable(setTable(pool, n, emb, beta), rng)
   }
 
   // 음료가 아주 많을 때의 근사: 하나씩, 이미 고른 것들과의 평균 유사도에 비례해서 추가

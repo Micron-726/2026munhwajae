@@ -24,6 +24,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // 수천~수만 번 뽑는 통계 테스트가 있어서 여유 있게
+    testTimeout: 30000,
     css: false,
   },
 })

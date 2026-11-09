@@ -31,11 +31,11 @@ function assertValidRecipe(r: Recipe, opts: { enabled: string[]; min: number; ma
 }
 
 describe('drinks.yaml', () => {
-  it('정상적으로 읽히고 아이스티를 포함한다', () => {
+  it('정상적으로 읽히고 아이스티·데자와를 포함한다', () => {
     expect(DRINK_CONFIG_ERROR).toBeNull()
-    expect(DRINKS.length).toBe(11)
+    expect(DRINKS.length).toBe(12)
     expect(DRINKS.map((d) => d.name)).toEqual([
-      '아메리카노', '물', '오렌지 주스', '밀키스', '사이다', '콜라', '포카리스웨트', '우유', '포도 주스', '사과 주스', '아이스티',
+      '아메리카노', '물', '오렌지 주스', '밀키스', '사이다', '콜라', '포카리스웨트', '우유', '포도 주스', '사과 주스', '아이스티', '데자와',
     ])
   })
 
