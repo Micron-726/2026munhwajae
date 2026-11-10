@@ -25,7 +25,8 @@
  * (모든 크기를 rem 으로 지정 → 스크롤 없이 한 화면에 들어감)
  */
 html {
-  font-size: clamp(9px, min(calc(100vw / 120), calc(100vh / 67.5)), 22px);
+  /* 하한 3px: 휴대폰처럼 아주 작은 화면에서도 잘리지 않고 전체가 축소되어 보이도록 */
+  font-size: clamp(3px, min(calc(100vw / 120), calc(100vh / 67.5)), 22px);
 }
 
 html,

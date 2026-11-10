@@ -35,6 +35,16 @@ npm run build
 `dist/index.html` **파일 하나**가 만들어집니다 (모든 리소스 포함, 약 5MB).
 이 파일만 USB 등으로 옮겨서 **더블클릭**하면 Chrome/Edge 에서 바로 실행됩니다. 서버나 인터넷이 필요 없습니다.
 
+### 미리보기용 아티팩트 (설치 없이 링크로 보기)
+
+```bash
+npm run build:artifact
+```
+
+`artifact/claude-chef.html` 이 만들어집니다. 빌드 결과에서 `<html>/<head>/<body>` 태그만 벗겨 낸 파일로,
+claude.ai 아티팩트로 올려 링크만으로 앱을 확인할 수 있게 할 때 씁니다.
+yaml 을 고친 뒤에는 이 명령을 다시 실행하고 같은 아티팩트에 다시 올리면 링크는 그대로 내용만 바뀝니다.
+
 ## 4. 테스트
 
 ```bash
