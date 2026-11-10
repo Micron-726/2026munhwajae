@@ -174,3 +174,15 @@ drinks:
     description: 부드러운 캔 밀크티
     containsCaffeine: true   # 홍차 밀크티 — 사용 제품 라벨 확인
     containsMilk: true       # 우유 성분 포함 — 사용 제품 라벨 확인
+
+  - id: matcha
+    name: 말차 원액
+    nickname: 말차
+    flavor: { bitter: 0.8, grassy: 1.0, creamy: 0.1 }   # grassy = 풀내음(새 맛 축)
+    icon: bottle
+    color: "#5B8A2E"
+    liquid: "#A9C76A"
+    label: MATCHA
+    description: 진하고 쌉쌀한 말차 원액 (진해서 소량만 들어가도 존재감 큼)
+    containsCaffeine: true   # 말차는 카페인 포함 — 사용 제품 라벨 확인
+    containsMilk: false      # 원액 기준 — 라떼용 제품이면 우유 성분 확인

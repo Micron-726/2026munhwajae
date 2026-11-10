@@ -17,7 +17,7 @@
 #  받침에 맞게 바뀝니다.  예) "{surprise}{이/가} 나타났다" → "우유가 나타났다" / "물이 나타났다"
 #
 #  맛 이름: sweet(단맛) sour(신맛) fizzy(탄산) creamy(우유) bitter(쓴맛)
-#           fruity(과일) salty(짠맛·이온) light(가볍고 맑음) default(그 외)
+#           fruity(과일) salty(짠맛·이온) light(가볍고 맑음) grassy(풀내음·말차) default(그 외)
 # ─────────────────────────────────────────────────────────────
 
 templates:
@@ -45,6 +45,7 @@ adjectives:
   fruity: [과즙 팡팡, 과일 폭탄, 상큼달콤, 과수원표]
   salty: [짭짤한, 이온 충전, 땀방울 같은, 바닷바람]
   light: [투명한, 맑디맑은, 밍밍한, 수상하게 맑은]
+  grassy: [풀내음 가득, 초록초록, 녹차밭 같은]
   default: [수상한, 정체불명, 미스터리]
 
 places:
@@ -56,6 +57,7 @@ places:
   fruity: [과수원, 열대 섬]
   salty: [운동장, 바닷가]
   light: [오아시스, 고요한 호수]
+  grassy: [녹차밭, 대나무 숲]
   default: [비밀 연구소, 셰프의 부엌]
 
 suffixes:
@@ -67,6 +69,7 @@ suffixes:
   salty: [부스터, 회복약]
   light: [워터, 티]
   sweet: [시럽, 슬러시]
+  grassy: [그린티, 말차샷]
   default: [포션, 묘약, 칵테일, 블렌드]
 
 moods:
