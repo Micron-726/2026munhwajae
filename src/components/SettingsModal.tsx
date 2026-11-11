@@ -248,6 +248,14 @@ function DrinkToggle({ drink, checked, onToggle }: { drink: Drink; checked: bool
       >
         {checked && <Check className="h-[1.3rem] w-[1.3rem] text-white" strokeWidth={4} />}
       </span>
+      {drink.maxMl !== undefined && (
+        <span
+          className="absolute left-[0.6rem] top-[0.65rem] rounded-full bg-ink px-[0.6rem] py-[0.1rem] text-[0.95rem] font-extrabold text-white"
+          title={`한 잔에 최대 ${drink.maxMl}mL 까지만 들어가요`}
+        >
+          최대 {drink.maxMl}mL
+        </span>
+      )}
       <span style={{ filter: checked ? 'none' : 'grayscale(1)', opacity: checked ? 1 : 0.45 }} className="transition">
         <DrinkIcon drink={drink} size="5.6rem" />
       </span>

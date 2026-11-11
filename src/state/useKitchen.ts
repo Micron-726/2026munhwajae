@@ -1,6 +1,6 @@
 import { useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { ALL_DRINK_IDS, DRINK_BY_ID, EMBEDDINGS, MIXING } from '../data/drinks'
+import { ALL_DRINK_IDS, DRINK_BY_ID, EMBEDDINGS, MAX_ML_BY_ID, MIXING } from '../data/drinks'
 import { buildTimeline, Timeline } from '../lib/animation'
 import { sound } from '../lib/sound'
 import { pickOne } from '../logic/random'
@@ -119,7 +119,10 @@ export function useKitchen() {
     }
     let recipe: Recipe
     try {
-      recipe = generateRecipe(settings, undefined, undefined, { config: MIXING, embeddings: EMBEDDINGS })
+      recipe = generateRecipe({ ...settings, maxMl: MAX_ML_BY_ID }, undefined, undefined, {
+        config: MIXING,
+        embeddings: EMBEDDINGS,
+      })
     } catch (err) {
       const msg = err instanceof RecipeError ? err.message : '레시피를 만들 수 없어요.'
       dispatch({ type: 'warn', speech: { main: '앗, 문제가 생겼어요!', sub: msg, tone: 'warn' } })

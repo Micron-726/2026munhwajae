@@ -21,6 +21,7 @@
 #   containsCaffeine  (선택) 카페인 포함 여부 (true/false) — 실제 제품 라벨로 확인!
 #   containsMilk      (선택) 우유 성분 포함 여부 (true/false) — 실제 제품 라벨로 확인!
 #   hidden    (선택) true 로 두면 목록에서 잠시 숨깁니다 (재료 소진 시 편리)
+#   maxMl     (선택) 한 잔에 넣을 수 있는 최대 mL (예: 진한 원액은 30). 비율을 뽑을 때 이 양을 넘지 않게 배정합니다
 #   flavor    (선택) 맛 프로필, 각 값 0~1. 궁합 모드의 "맛 임베딩"이 됩니다.
 #             기본 축: sweet(단맛) sour(신맛) fizzy(탄산) creamy(우유·크림)
 #                      bitter(쓴맛) fruity(과일) salty(짠맛·이온) light(가볍고 깔끔)
@@ -56,6 +57,7 @@ drinks:
 
   - id: water
     name: 물
+    hidden: true   # 메뉴에서 제외 (다시 쓰려면 이 줄 삭제)
     flavor: { light: 1.0 }
     icon: glass
     color: "#4BA3E3"
@@ -177,6 +179,7 @@ drinks:
 
   - id: matcha
     name: 말차 원액
+    maxMl: 30      # 진하니까 한 잔에 최대 30mL 까지만
     nickname: 말차
     flavor: { bitter: 0.8, grassy: 1.0, creamy: 0.1 }   # grassy = 풀내음(새 맛 축)
     icon: bottle

@@ -54,5 +54,9 @@ export const FLAVOR_AXES: readonly string[] = embedding.axes
 export const DRINKS_WITHOUT_FLAVOR: readonly string[] = drinks.filter((d) => !d.flavor || Object.keys(d.flavor).length === 0).map((d) => d.name)
 export const DRINK_BY_ID: ReadonlyMap<string, Drink> = new Map(drinks.map((d) => [d.id, d]))
 export const ALL_DRINK_IDS: readonly string[] = drinks.map((d) => d.id)
+/** 음료별 최대 mL (drinks.yaml 의 maxMl) */
+export const MAX_ML_BY_ID: Readonly<Record<string, number>> = Object.fromEntries(
+  drinks.filter((d) => d.maxMl !== undefined).map((d) => [d.id, d.maxMl as number]),
+)
 
 export type { Drink }

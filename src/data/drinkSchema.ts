@@ -22,6 +22,8 @@ export interface Drink {
   description?: string
   /** 맛 프로필 (0~1) — 궁합 임베딩의 재료 */
   flavor?: Record<string, number>
+  /** 한 잔에 넣을 수 있는 최대 mL (없으면 제한 없음) */
+  maxMl?: number
   containsCaffeine: boolean
   containsMilk: boolean
 }
@@ -86,6 +88,8 @@ export function parseDrinks(raw: unknown): Drink[] {
     for (const key of ['containsCaffeine', 'containsMilk', 'hidden'] as const) {
       if (item[key] !== undefined && typeof item[key] !== 'boolean') errs.push(`${key} 는 true 또는 false 여야 합니다.`)
     }
+    if (item.maxMl !== undefined && (typeof item.maxMl !== 'number' || !Number.isInteger(item.maxMl) || item.maxMl < 1 || item.maxMl > 180))
+      errs.push('maxMl 은 1~180 사이 정수(mL)여야 합니다.')
     let flavor: Record<string, number> | undefined
     if (item.flavor !== undefined) {
       if (!isRecord(item.flavor)) errs.push('flavor 는 { 맛이름: 숫자 } 형식이어야 합니다. 예) { sweet: 0.8, fizzy: 1 }')
@@ -118,6 +122,7 @@ export function parseDrinks(raw: unknown): Drink[] {
       description: typeof item.description === 'string' ? item.description : undefined,
       image: typeof item.image === "string" ? item.image.trim() : undefined,
       flavor,
+      maxMl: typeof item.maxMl === 'number' ? item.maxMl : undefined,
       containsCaffeine: item.containsCaffeine === true,
       containsMilk: item.containsMilk === true,
     })

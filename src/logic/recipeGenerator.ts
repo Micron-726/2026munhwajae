@@ -40,13 +40,49 @@ export function chooseRatio(count: number, rng: Rng = defaultRng): number[] {
   return shuffle(pickOne(getTemplates(count), rng), rng)
 }
 
+function permutations(n: number): number[][] {
+  if (n === 0) return [[]]
+  const out: number[][] = []
+  for (const p of permutations(n - 1))
+    for (let i = 0; i <= p.length; i++) out.push([...p.slice(0, i), n - 1, ...p.slice(i)])
+  return out
+}
+
+/**
+ * 3단계(최대 mL 제한이 있을 때): 각 음료의 maxMl 을 넘지 않는 배정만 고른다.
+ *  - 제한을 지킬 수 있는 템플릿 중에서 균등하게 하나
+ *  - 그 템플릿 안에서 제한을 지키는 순서 중 균등하게 하나
+ * 지킬 수 있는 템플릿이 하나도 없으면 null.
+ */
+export function chooseRatioWithCaps(
+  drinkIds: readonly string[],
+  maxMl: Readonly<Record<string, number>>,
+  rng: Rng = defaultRng,
+): number[] | null {
+  const n = drinkIds.length
+  const caps = drinkIds.map((id) => maxMl[id] ?? Infinity)
+  if (caps.every((c) => c === Infinity)) return chooseRatio(n, rng)
+  const perms = permutations(n)
+  const options = getTemplates(n)
+    .map((t) => perms.filter((p) => p.every((src, i) => t[src] <= caps[i])).map((p) => p.map((src) => t[src])))
+    .filter((valid) => valid.length > 0)
+  if (options.length === 0) return null
+  return pickOne(pickOne(options, rng), rng)
+}
+
 let seq = 0
 
 /**
  * 레시피 전체를 한 번에 확정한다. 애니메이션은 이 결과를 보여주기만 한다.
  */
 export function generateRecipe(
-  opts: { enabledDrinkIds: readonly string[]; minCount: number; maxCount: number },
+  opts: {
+    enabledDrinkIds: readonly string[]
+    minCount: number
+    maxCount: number
+    /** 음료별 최대 mL (drinks.yaml 의 maxMl) */
+    maxMl?: Readonly<Record<string, number>>
+  },
   rng: Rng = defaultRng,
   now: () => number = Date.now,
   mixing?: { config: MixingConfig; embeddings: Embeddings },
@@ -57,18 +93,26 @@ export function generateRecipe(
 
   const count = chooseDrinkCount(opts.minCount, opts.maxCount, rng)
   const harmony = mixing && mixing.config.mode === 'harmony'
-  const pick = harmony
-    ? chooseDrinksHarmony(enabled, count, mixing.embeddings, mixing.config, rng)
-    : { ids: chooseDrinks(enabled, count, rng), surpriseIndex: null }
+  const caps = opts.maxMl ?? {}
+
+  // 음료를 고르고, 최대 mL 제한을 지키는 비율이 있는지 확인. 없으면 같은 개수로 음료만 다시 고른다.
+  let pick: { ids: string[]; surpriseIndex: number | null } | null = null
+  let mls: number[] | null = null
+  for (let attempt = 0; attempt < 200 && !mls; attempt++) {
+    pick = harmony
+      ? chooseDrinksHarmony(enabled, count, mixing.embeddings, mixing.config, rng)
+      : { ids: chooseDrinks(enabled, count, rng), surpriseIndex: null }
+    mls = chooseRatioWithCaps(pick.ids, caps, rng)
+  }
+  if (!pick || !mls) throw new RecipeError('최대 mL 제한을 지키는 비율을 찾지 못했어요. drinks.yaml 의 maxMl 을 확인해 주세요.')
   const drinkIds = pick.ids
   if (new Set(drinkIds).size !== count) throw new RecipeError('음료 중복 오류')
-  const mls = chooseRatio(count, rng)
 
   const items = drinkIds.map((drinkId, i) => ({
     drinkId,
     ml: mls[i],
     fraction: mlToFraction(mls[i], TOTAL_ML),
-    surprise: pick.surpriseIndex === i,
+    surprise: pick!.surpriseIndex === i,
   }))
   const total = items.reduce((a, b) => a + b.ml, 0)
   if (total !== TOTAL_ML) throw new RecipeError(`총량 오류: ${total}mL`)

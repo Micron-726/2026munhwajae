@@ -74,7 +74,7 @@ describe('설정 모달', () => {
     render(<App />)
     const dialog = openSettings()
     fireEvent.click(within(dialog).getByRole('button', { name: '모두 해제' }))
-    for (const name of ['물', '콜라', '우유']) fireEvent.click(within(dialog).getByRole('checkbox', { name }))
+    for (const name of ['사이다', '콜라', '우유']) fireEvent.click(within(dialog).getByRole('checkbox', { name }))
     expect(within(dialog).getByText(/최대 4개의 음료를 뽑으려면 재료를 4개 이상 선택해 주세요!/)).toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: '이 설정으로 시작하기' })).toBeDisabled()
     expect(within(dialog).getByTestId('max-value')).toHaveTextContent('4')
