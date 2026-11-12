@@ -1,6 +1,8 @@
 import rawDrinks from '../../drinks.yaml'
 import { buildEmbeddings, DEFAULT_MIXING, type Embeddings, type MixingConfig } from '../logic/harmony'
-import { DrinkConfigError, parseDrinks, parseMixing, type Drink } from './drinkSchema'
+import { activePairs, maxCompatibleCount, type ForbiddenPair } from '../logic/compat'
+import { validateSettings } from '../logic/settings'
+import { DrinkConfigError, parseDrinks, parseForbiddenPairs, parseMixing, type Drink } from './drinkSchema'
 
 /**
  * drink-images 폴더의 사진을 빌드에 함께 넣는다.
@@ -19,10 +21,12 @@ const IMAGE_BY_NAME = new Map<string, string>(
 let drinks: Drink[] = []
 let configError: DrinkConfigError | null = null
 let mixing: MixingConfig = { ...DEFAULT_MIXING }
+let forbiddenPairs: ForbiddenPair[] = []
 const imageWarnings: string[] = []
 
 try {
   mixing = parseMixing(rawDrinks)
+  forbiddenPairs = parseForbiddenPairs(rawDrinks)
   drinks = parseDrinks(rawDrinks).map((d) => {
     if (!d.image) return d
     const url = IMAGE_BY_NAME.get(d.image.toLowerCase())
@@ -60,3 +64,25 @@ export const MAX_ML_BY_ID: Readonly<Record<string, number>> = Object.fromEntries
 )
 
 export type { Drink }
+
+/** 함께 나오면 안 되는 음료 쌍 (drinks.yaml 의 forbiddenPairs, 숨긴 음료 포함) */
+export const FORBIDDEN_PAIRS: readonly ForbiddenPair[] = forbiddenPairs
+
+/** 안내용 이름: [[cola, milk]] → "콜라 + 우유" (켜진 음료 기준, 숨긴 음료는 제외) */
+export function forbiddenHint(pairs: readonly ForbiddenPair[]): string {
+  return pairs
+    .filter(([a, b]) => DRINK_BY_ID.has(a) && DRINK_BY_ID.has(b))
+    .map(([a, b]) => `${DRINK_BY_ID.get(a)!.name} + ${DRINK_BY_ID.get(b)!.name}`)
+    .join(', ')
+}
+
+/** 화면에서 쓰는 설정 검사: 금지 조합까지 고려해서 추첨 가능한지 확인 */
+export function validateKitchenSettings(enabledIds: readonly string[], minCount: number, maxCount: number) {
+  return validateSettings({
+    enabledCount: new Set(enabledIds).size,
+    minCount,
+    maxCount,
+    maxCompatible: maxCompatibleCount(enabledIds, FORBIDDEN_PAIRS),
+    conflictHint: forbiddenHint(activePairs(enabledIds, FORBIDDEN_PAIRS)) || undefined,
+  })
+}

@@ -9,12 +9,12 @@ import { IngredientCard, type CardState } from './components/IngredientCard'
 import { RatioBar } from './components/RatioBar'
 import { RouletteDisplay } from './components/RouletteDisplay'
 import { SettingsModal } from './components/SettingsModal'
-import { DRINK_BY_ID, DRINK_CONFIG_ERROR, DRINKS } from './data/drinks'
+import { DRINK_BY_ID, DRINK_CONFIG_ERROR, DRINKS, validateKitchenSettings } from "./data/drinks"
 import { NAME_BOOK_ERROR } from './data/names'
 import { NamePlate } from './components/NamePlate'
 import { sound } from './lib/sound'
 import { TOTAL_ML } from './logic/fractions'
-import { validateSettings, type MixSettings } from './logic/settings'
+import type { MixSettings } from "./logic/settings"
 import { ORDINALS, type KitchenState } from './state/kitchen'
 import { useKitchen } from './state/useKitchen'
 
@@ -59,11 +59,11 @@ function Kitchen() {
     [k],
   )
 
-  const settingsProblems = validateSettings({
-    enabledCount: state.settings.enabledDrinkIds.length,
-    minCount: state.settings.minCount,
-    maxCount: state.settings.maxCount,
-  })
+  const settingsProblems = validateKitchenSettings(
+    state.settings.enabledDrinkIds,
+    state.settings.minCount,
+    state.settings.maxCount,
+  )
 
   const completed = state.phase === 'completed'
   const recipe = state.recipe

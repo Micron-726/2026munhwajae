@@ -1,3 +1,4 @@
+import type { ForbiddenPair } from '../logic/compat'
 import { DEFAULT_MIXING, type MixingConfig } from '../logic/harmony'
 export const ICON_SHAPES = ['cup', 'glass', 'tall-glass', 'can', 'bottle', 'carton'] as const
 export type IconShape = (typeof ICON_SHAPES)[number]
@@ -154,6 +155,31 @@ export function parseMixing(raw: unknown): MixingConfig {
   num('harmony', 0, 20)
   num('surprise', 0, 1)
   num('surpriseNoise', 0, 5)
+  if (problems.length) throw new DrinkConfigError(problems)
+  return out
+}
+
+/** drinks.yaml 의 forbiddenPairs: 섹션. 모르는 id 나 같은 음료 두 번은 오류 */
+export function parseForbiddenPairs(raw: unknown): ForbiddenPair[] {
+  if (!isRecord(raw) || raw.forbiddenPairs === undefined || raw.forbiddenPairs === null) return []
+  const list = raw.forbiddenPairs
+  if (!Array.isArray(list)) throw new DrinkConfigError(['forbiddenPairs 는 [음료id, 음료id] 목록이어야 합니다.'])
+  const known = new Set(
+    (Array.isArray(raw.drinks) ? raw.drinks : []).flatMap((d) => (isRecord(d) && typeof d.id === 'string' ? [d.id] : [])),
+  )
+  const problems: string[] = []
+  const out: ForbiddenPair[] = []
+  list.forEach((p, i) => {
+    const where = `forbiddenPairs ${i + 1}번째`
+    if (!Array.isArray(p) || p.length !== 2 || p.some((x) => typeof x !== 'string')) {
+      problems.push(`${where}: [음료id, 음료id] 형식이어야 합니다. 예) [cola, milk]`)
+      return
+    }
+    const [a, b] = p as [string, string]
+    if (a === b) problems.push(`${where}: 같은 음료 두 개는 넣을 수 없어요.`)
+    for (const id of [a, b]) if (!known.has(id)) problems.push(`${where}: "${id}" 라는 음료 id 가 없어요.`)
+    out.push([a, b])
+  })
   if (problems.length) throw new DrinkConfigError(problems)
   return out
 }

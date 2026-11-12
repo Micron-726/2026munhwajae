@@ -6,9 +6,10 @@ import { withAlpha } from '../lib/color'
 import { sound } from '../lib/sound'
 import { TOTAL_ML } from '../logic/fractions'
 import { MAX_SUPPORTED_COUNT, MIN_SUPPORTED_COUNT } from '../logic/ratioTemplates'
-import { DEFAULT_MAX_COUNT, DEFAULT_MIN_COUNT, validateSettings, type MixSettings } from '../logic/settings'
+import { DEFAULT_MAX_COUNT, DEFAULT_MIN_COUNT, type MixSettings } from "../logic/settings"
 import { DrinkIcon } from './icons/DrinkIcon'
-import { DRINK_IMAGE_WARNINGS } from '../data/drinks'
+import { DRINK_IMAGE_WARNINGS, FORBIDDEN_PAIRS, forbiddenHint, validateKitchenSettings } from "../data/drinks"
+import { applyJosa } from '../logic/drinkName'
 
 interface Props {
   drinks: readonly Drink[]
@@ -24,8 +25,8 @@ export function SettingsModal({ drinks, initial, onApply, onClose }: Props) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
   const problems = useMemo(
-    () => validateSettings({ enabledCount: enabled.size, minCount, maxCount }),
-    [enabled.size, minCount, maxCount],
+    () => validateKitchenSettings([...enabled], minCount, maxCount),
+    [enabled, minCount, maxCount],
   )
   const bad = (f: 'min' | 'max' | 'drinks') => problems.some((p) => p.field === f)
 
@@ -146,6 +147,11 @@ export function SettingsModal({ drinks, initial, onApply, onClose }: Props) {
             >
               현재 <span className="font-display text-[1.8rem] text-primary">{enabled.size}</span>개의 음료가 선택되었습니다.
             </p>
+            {forbiddenHint(FORBIDDEN_PAIRS) && (
+              <p className="mt-[0.3rem] text-center text-[1.15rem] font-bold text-muted">
+                🚫 {applyJosa(`${forbiddenHint(FORBIDDEN_PAIRS)}{은/는}`)} 한 잔에 같이 나오지 않아요
+              </p>
+            )}
             {DRINK_IMAGE_WARNINGS.map((w) => (
               <p key={w} className="mt-[0.3rem] text-center text-[1.1rem] font-semibold text-muted">
                 🖼️ {w}

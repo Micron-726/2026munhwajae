@@ -1,5 +1,6 @@
 import { mlToFraction, TOTAL_ML, type Fraction } from './fractions'
 import { getTemplates } from './ratioTemplates'
+import { findForbidden, maxCompatibleCount, type ForbiddenPair } from './compat'
 import { chooseDrinksHarmony, type Embeddings, type MixingConfig } from './harmony'
 import { defaultRng, pickOne, randomInt, shuffle, type Rng } from './random'
 import { validateSettings } from './settings'
@@ -82,29 +83,40 @@ export function generateRecipe(
     maxCount: number
     /** 음료별 최대 mL (drinks.yaml 의 maxMl) */
     maxMl?: Readonly<Record<string, number>>
+    /** 함께 나오면 안 되는 음료 쌍 (drinks.yaml 의 forbiddenPairs) */
+    forbiddenPairs?: readonly ForbiddenPair[]
   },
   rng: Rng = defaultRng,
   now: () => number = Date.now,
   mixing?: { config: MixingConfig; embeddings: Embeddings },
 ): Recipe {
   const enabled = Array.from(new Set(opts.enabledDrinkIds))
-  const problems = validateSettings({ enabledCount: enabled.length, minCount: opts.minCount, maxCount: opts.maxCount })
+  const forbidden = opts.forbiddenPairs ?? []
+  const problems = validateSettings({
+    enabledCount: enabled.length,
+    minCount: opts.minCount,
+    maxCount: opts.maxCount,
+    maxCompatible: maxCompatibleCount(enabled, forbidden),
+  })
   if (problems.length) throw new RecipeError(problems[0].message)
 
   const count = chooseDrinkCount(opts.minCount, opts.maxCount, rng)
   const harmony = mixing && mixing.config.mode === 'harmony'
   const caps = opts.maxMl ?? {}
 
-  // 음료를 고르고, 최대 mL 제한을 지키는 비율이 있는지 확인. 없으면 같은 개수로 음료만 다시 고른다.
+  // 음료를 고른 뒤, 금지 조합이 있거나 최대 mL 제한을 지킬 수 없으면 같은 개수로 다시 고른다.
+  // (조건에 맞을 때까지 다시 뽑기 = 원래 분포를 조건에 맞는 묶음들로만 정확히 다시 맞춘 것과 같다)
   let pick: { ids: string[]; surpriseIndex: number | null } | null = null
   let mls: number[] | null = null
-  for (let attempt = 0; attempt < 200 && !mls; attempt++) {
+  for (let attempt = 0; attempt < 500 && !mls; attempt++) {
     pick = harmony
       ? chooseDrinksHarmony(enabled, count, mixing.embeddings, mixing.config, rng)
       : { ids: chooseDrinks(enabled, count, rng), surpriseIndex: null }
+    if (findForbidden(pick.ids, forbidden)) continue
     mls = chooseRatioWithCaps(pick.ids, caps, rng)
   }
-  if (!pick || !mls) throw new RecipeError('최대 mL 제한을 지키는 비율을 찾지 못했어요. drinks.yaml 의 maxMl 을 확인해 주세요.')
+  if (!pick || !mls)
+    throw new RecipeError('금지 조합·최대 mL 조건을 모두 지키는 레시피를 찾지 못했어요. 재료를 더 선택해 주세요.')
   const drinkIds = pick.ids
   if (new Set(drinkIds).size !== count) throw new RecipeError('음료 중복 오류')
 

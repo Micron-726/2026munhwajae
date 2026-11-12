@@ -1,13 +1,21 @@
 import { useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
-import { ALL_DRINK_IDS, DRINK_BY_ID, EMBEDDINGS, MAX_ML_BY_ID, MIXING } from '../data/drinks'
+import {
+  ALL_DRINK_IDS,
+  DRINK_BY_ID,
+  EMBEDDINGS,
+  FORBIDDEN_PAIRS,
+  MAX_ML_BY_ID,
+  MIXING,
+  validateKitchenSettings,
+} from '../data/drinks'
 import { buildTimeline, Timeline } from '../lib/animation'
 import { sound } from '../lib/sound'
 import { pickOne } from '../logic/random'
 import { nameDrink, type DrinkName } from '../logic/drinkName'
 import { generateRecipe, RecipeError, type Recipe } from '../logic/recipeGenerator'
 import { NAME_BOOK } from '../data/names'
-import { defaultSettings, validateSettings, type MixSettings } from '../logic/settings'
+import { defaultSettings, type MixSettings } from '../logic/settings'
 import { initialKitchenState, kitchenReducer, ORDINALS, type KitchenEvent, type Speech } from './kitchen'
 
 const EXCLAIMS = [
@@ -108,18 +116,14 @@ export function useKitchen() {
   const draw = useCallback(() => {
     if (busyRef.current) return
     const { settings } = state
-    const problems = validateSettings({
-      enabledCount: settings.enabledDrinkIds.length,
-      minCount: settings.minCount,
-      maxCount: settings.maxCount,
-    })
+    const problems = validateKitchenSettings(settings.enabledDrinkIds, settings.minCount, settings.maxCount)
     if (problems.length) {
       dispatch({ type: 'warn', speech: { main: '앗, 재료가 부족해요!', sub: problems[0].message, tone: 'warn' } })
       return false
     }
     let recipe: Recipe
     try {
-      recipe = generateRecipe({ ...settings, maxMl: MAX_ML_BY_ID }, undefined, undefined, {
+      recipe = generateRecipe({ ...settings, maxMl: MAX_ML_BY_ID, forbiddenPairs: FORBIDDEN_PAIRS }, undefined, undefined, {
         config: MIXING,
         embeddings: EMBEDDINGS,
       })
