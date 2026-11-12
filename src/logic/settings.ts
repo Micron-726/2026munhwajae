@@ -1,6 +1,7 @@
 import { MAX_SUPPORTED_COUNT, MIN_SUPPORTED_COUNT } from './ratioTemplates'
 
-export const DEFAULT_MIN_COUNT = 2
+/** 처음 켤 때 · 새 손님 시작 · 기본값 복원 때의 혼합 개수 (명세서 기본값은 2~4, 부스 운영상 3~4로 변경) */
+export const DEFAULT_MIN_COUNT = 3
 export const DEFAULT_MAX_COUNT = 4
 
 export interface MixSettings {

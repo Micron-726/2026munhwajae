@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../App'
 import { DRINKS } from '../data/drinks'
+import { DEFAULT_MAX_COUNT, DEFAULT_MIN_COUNT } from '../logic/settings'
 
 const N = DRINKS.length // drinks.yaml 의 음료 수
 import { generateRecipe } from '../logic/recipeGenerator'
@@ -105,7 +106,7 @@ describe('추첨 흐름', () => {
   it('시나리오 1·2·3: 제외 → 뽑기 → 다시 뽑기 → 새 손님', async () => {
     const { container } = render(<App />)
 
-    // 시나리오 1 — 아메리카노와 우유 제외, 2~4개
+    // 시나리오 1 — 아메리카노와 우유 제외, 기본 개수(3~4개)
     const dialog = openSettings()
     fireEvent.click(within(dialog).getByRole('checkbox', { name: '아메리카노' }))
     fireEvent.click(within(dialog).getByRole('checkbox', { name: '우유' }))
@@ -120,8 +121,8 @@ describe('추첨 흐름', () => {
 
     const recipe = vi.mocked(generateRecipe).mock.results[0].value
     const n = recipe.items.length
-    expect(n).toBeGreaterThanOrEqual(2)
-    expect(n).toBeLessThanOrEqual(4)
+    expect(n).toBeGreaterThanOrEqual(DEFAULT_MIN_COUNT)
+    expect(n).toBeLessThanOrEqual(DEFAULT_MAX_COUNT)
 
     // 재료가 하나씩 누적된다 (앞에서 뽑힌 카드가 사라지지 않음)
     await advance(2100)
@@ -149,8 +150,8 @@ describe('추첨 흐름', () => {
     const second = vi.mocked(generateRecipe).mock.calls[1][0]
     expect(second.enabledDrinkIds).not.toContain('americano')
     expect(second.enabledDrinkIds).not.toContain('milk')
-    expect(second.minCount).toBe(2)
-    expect(second.maxCount).toBe(4)
+    expect(second.minCount).toBe(DEFAULT_MIN_COUNT)
+    expect(second.maxCount).toBe(DEFAULT_MAX_COUNT)
     await advance(LONGEST_SHOW_MS)
     expect(phase(container)).toBe('completed')
     expect(summary()).toContain(`${N - 2}/${N}`)
@@ -159,7 +160,7 @@ describe('추첨 흐름', () => {
     fireEvent.click(screen.getByRole('button', { name: /새 손님 시작/ }))
     expect(phase(container)).toBe('idle')
     expect(summary()).toContain(`${N}/${N}`)
-    expect(summary()).toContain('2~4가지')
+    expect(summary()).toContain(`${DEFAULT_MIN_COUNT}~${DEFAULT_MAX_COUNT}가지`)
     await advance(300)
     expect(screen.getByText('새 손님 어서 오세요!')).toBeInTheDocument()
     const d2 = openSettings()
