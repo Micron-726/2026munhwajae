@@ -7,16 +7,18 @@ import { chooseRatioWithCaps, generateRecipe } from '../logic/recipeGenerator'
 
 const IDS = [...ALL_DRINK_IDS]
 
-describe('물은 메뉴에서 빠짐', () => {
-  it('water 는 hidden 이라 목록에 없다', () => {
-    expect(DRINK_BY_ID.has('water')).toBe(false)
-    expect(IDS).not.toContain('water')
+describe('물·말차는 메뉴에서 삭제됨', () => {
+  it('목록에 없다', () => {
+    for (const id of ['water', 'matcha']) expect(DRINK_BY_ID.has(id)).toBe(false)
   })
 })
 
-describe('말차 원액 최대 30mL', () => {
-  it('drinks.yaml 에서 maxMl 30 으로 읽힌다', () => {
-    expect(MAX_ML_BY_ID).toEqual({ matcha: 30 })
+// 지금 drinks.yaml 에는 maxMl 음료가 없으므로, 기능 검증용으로 데자와에 30mL 제한을 걸어서 시험한다
+const CAPS = { dejawa: 30 }
+
+describe('음료별 최대 mL (maxMl)', () => {
+  it('지금 drinks.yaml 에는 제한 음료가 없다', () => {
+    expect(MAX_ML_BY_ID).toEqual({})
   })
 
   it('maxMl 형식 검사', () => {
@@ -27,25 +29,25 @@ describe('말차 원액 최대 30mL', () => {
     expect(parseDrinks({ drinks: [{ ...base, maxMl: 45 }, ok] })[0].maxMl).toBe(45)
   })
 
-  it('2가지 섞을 때: 말차는 항상 30mL, 나머지는 150mL', () => {
+  it('2가지 섞을 때: 데자와(시험용 30mL 제한)는 항상 30mL, 나머지는 150mL', () => {
     const rng = seededRng(1)
     for (let i = 0; i < 500; i++) {
-      const order = rng() < 0.5 ? ['matcha', 'cola'] : ['cola', 'matcha']
-      const mls = chooseRatioWithCaps(order, MAX_ML_BY_ID, rng)!
-      expect(mls[order.indexOf('matcha')]).toBe(30)
+      const order = rng() < 0.5 ? ['dejawa', 'cola'] : ['cola', 'dejawa']
+      const mls = chooseRatioWithCaps(order, CAPS, rng)!
+      expect(mls[order.indexOf('dejawa')]).toBe(30)
       expect(mls[order.indexOf('cola')]).toBe(150)
     }
   })
 
-  it('3가지 섞을 때: 말차는 15mL 또는 30mL 만, 다른 음료는 제한 없음', () => {
+  it('3가지 섞을 때: 데자와(시험용 30mL 제한)는 15mL 또는 30mL 만, 다른 음료는 제한 없음', () => {
     const rng = seededRng(2)
     const seen = new Set<number>()
     const others = new Set<number>()
     for (let i = 0; i < 3000; i++) {
-      const ids = shuffle(['matcha', 'milk', 'dejawa'], rng)
-      const mls = chooseRatioWithCaps(ids, MAX_ML_BY_ID, rng)!
-      seen.add(mls[ids.indexOf('matcha')])
-      ids.forEach((id, k) => id !== 'matcha' && others.add(mls[k]))
+      const ids = shuffle(['dejawa', 'milk', 'cider'], rng)
+      const mls = chooseRatioWithCaps(ids, CAPS, rng)!
+      seen.add(mls[ids.indexOf('dejawa')])
+      ids.forEach((id, k) => id !== 'dejawa' && others.add(mls[k]))
       expect(mls.reduce((a, b) => a + b, 0)).toBe(TOTAL_ML)
     }
     expect([...seen].every((v) => v <= 30)).toBe(true)
@@ -59,24 +61,24 @@ describe('말차 원액 최대 30mL', () => {
   it('제한 음료가 없으면 기존 방식과 같은 분포 (모든 템플릿 사용)', () => {
     const rng = seededRng(4)
     const firsts = new Set<number>()
-    for (let i = 0; i < 2000; i++) firsts.add(chooseRatioWithCaps(['cola', 'milk'], MAX_ML_BY_ID, rng)![0])
+    for (let i = 0; i < 2000; i++) firsts.add(chooseRatioWithCaps(['cola', 'milk'], CAPS, rng)![0])
     expect([...firsts].sort((a, b) => a - b)).toEqual([30, 45, 60, 90, 120, 135, 150])
   })
 
-  it('실제 뽑기 10,000회: 말차는 절대 30mL 를 넘지 않고, 다른 규칙도 그대로', () => {
+  it('실제 뽑기 10,000회: 데자와(시험용 30mL 제한)는 절대 30mL 를 넘지 않고, 다른 규칙도 그대로', () => {
     const rng = seededRng(2026)
-    let matchaCount = 0
+    let cappedCount = 0
     for (let i = 0; i < 10000; i++) {
       const min = randomInt(2, 5, rng)
       const max = randomInt(min, 5, rng)
       const enabled = shuffle(IDS, rng).slice(0, randomInt(max, IDS.length, rng))
-      const r = generateRecipe({ enabledDrinkIds: enabled, minCount: min, maxCount: max, maxMl: MAX_ML_BY_ID }, rng, Date.now, {
+      const r = generateRecipe({ enabledDrinkIds: enabled, minCount: min, maxCount: max, maxMl: CAPS }, rng, Date.now, {
         config: MIXING,
         embeddings: EMBEDDINGS,
       })
-      const m = r.items.find((x) => x.drinkId === 'matcha')
+      const m = r.items.find((x) => x.drinkId === 'dejawa')
       if (m) {
-        matchaCount++
+        cappedCount++
         expect(m.ml).toBeLessThanOrEqual(30)
       }
       expect(r.count).toBeGreaterThanOrEqual(min)
@@ -85,6 +87,6 @@ describe('말차 원액 최대 30mL', () => {
       for (const it of r.items) expect(enabled).toContain(it.drinkId)
       expect(r.items.reduce((a, b) => a + b.ml, 0)).toBe(TOTAL_ML)
     }
-    expect(matchaCount).toBeGreaterThan(500) // 말차도 충분히 등장한다
+    expect(cappedCount).toBeGreaterThan(500) // 데자와(시험용 30mL 제한)도 충분히 등장한다
   })
 })

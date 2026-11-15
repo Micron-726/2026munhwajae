@@ -60,18 +60,6 @@ drinks:
     containsCaffeine: true
     containsMilk: false
 
-  - id: water
-    name: 물
-    hidden: true   # 메뉴에서 제외 (다시 쓰려면 이 줄 삭제)
-    flavor: { light: 1.0 }
-    icon: glass
-    color: "#4BA3E3"
-    liquid: "#CDEBFF"
-    garnish: ice
-    description: 모든 것을 희석하는 자
-    containsCaffeine: false
-    containsMilk: false
-
   - id: orange-juice
     name: 오렌지 주스
     flavor: { sweet: 0.7, sour: 0.7, fruity: 1.0, light: 0.3 }
@@ -182,15 +170,3 @@ drinks:
     containsCaffeine: true   # 홍차 밀크티 — 사용 제품 라벨 확인
     containsMilk: true       # 우유 성분 포함 — 사용 제품 라벨 확인
 
-  - id: matcha
-    name: 말차 원액
-    maxMl: 30      # 진하니까 한 잔에 최대 30mL 까지만
-    nickname: 말차
-    flavor: { bitter: 0.8, grassy: 1.0, creamy: 0.1 }   # grassy = 풀내음(새 맛 축)
-    icon: bottle
-    color: "#5B8A2E"
-    liquid: "#A9C76A"
-    label: MATCHA
-    description: 진하고 쌉쌀한 말차 원액 (진해서 소량만 들어가도 존재감 큼)
-    containsCaffeine: true   # 말차는 카페인 포함 — 사용 제품 라벨 확인
-    containsMilk: false      # 원액 기준 — 라떼용 제품이면 우유 성분 확인
